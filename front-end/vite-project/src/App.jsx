@@ -8,17 +8,28 @@ export default function YouTubeDownloader() {
   const [downloadLink, setDownloadLink] = useState("");
   const [title, setTitle] = useState("YouTube to MP3 Converter");
   const [isLoading, setIsLoading] = useState(false);
-  const [progress, setProgress] = useState(null);
+  const [videoId, setVideoId] = useState("");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     setDownloadLink("");
+    console.log("rhis is id", videoId);
+    const urlObj = new URL(url);
+    if (urlObj) {
+      const searchParams = new URLSearchParams(urlObj.search);
+      const id = searchParams.get("v");
+      setVideoId(id);
+    } else {
+      setVideoId("Invalid URL");
+    }
+
     try {
       const res = await fetch("http://localhost:4040/youtube/mp3", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ videoId }),
       });
 
       if (!res.ok) {
@@ -28,14 +39,11 @@ export default function YouTubeDownloader() {
       console.log(data, "this is data");
       if (data.error) {
         setError(data.error);
-      } else if (data.finalUrl && data.finalUrl.link) {
-        setDownloadLink(data.finalUrl.link);
-        setTitle(data.finalUrl.title);
-        setProgress(data.finalUrl.progress);
-        setUrl("");
-        console.log("Download URL set:", data.finalUrl.link);
       } else {
-        setError("No download URL received from server");
+        setDownloadLink(data.final.link);
+        setTitle(data.final.title);
+        setUrl("");
+        console.log("Download URL set:", data.final.link);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -50,7 +58,11 @@ export default function YouTubeDownloader() {
   return (
     <div className="grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <div className="w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">
+        <h1
+          style={{
+            color: "white",
+          }}
+        >
           {!isLoading ? title : "YouTube to MP3 Converter"}
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -60,14 +72,26 @@ export default function YouTubeDownloader() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="Enter YouTube URL"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2  focus:ring-red-500 focus:border-red-500 transition-all"
+              style={{
+                width: "600px",
+                textAlign: "center",
+                padding: "12px",
+                border: "1px solid #D1D5DB",
+                borderRadius: "0.5rem",
+                outline: "none",
+                transition: "all 0.2s ease",
+                marginBottom: "10px",
+              }}
               disabled={isLoading}
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading || !url}
+            style={{
+              width: "400px",
+              marginBottom: "10px",
+            }}
           >
             {isLoading ? `Processing...` : "Convert to MP3"}
           </button>
@@ -82,11 +106,16 @@ export default function YouTubeDownloader() {
             <a
               href={downloadLink}
               download
-              className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-20 px-6 rounded-lg transition-colors"
+              className="inline-block bg-green-600 hover:bg-green-700  font-medium py-20 px-6 rounded-lg transition-colors"
             >
               Download Mp3
             </a>
-            <p className="mt-2 text-sm text-gray-500">
+            <p
+              style={{
+                color: "white",
+                opacity: "0.1",
+              }}
+            >
               Click the button above to download your audio
             </p>
           </div>

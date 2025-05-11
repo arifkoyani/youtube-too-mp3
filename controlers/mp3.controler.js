@@ -2,16 +2,17 @@ import fetch from "node-fetch";
 import dotenv from "dotenv";
 dotenv.config();
 export async function mp3Converter(req, res, next) {
-  const { url } = req.body;
-  if (url == "" || url == undefined || url == null) {
-    console.log(`URL IS require : ${url}`);
+  const { videoId } = req.body;
+  console.log(videoId, "this is ID");
+  if (videoId == "" || videoId == undefined || videoId == null) {
+    console.log(`videoId IS require : ${videoId}`);
     return res
       .status(203)
-      .json({ message: "please end video URL", errror: true });
+      .json({ message: "please end video videoId", errror: true });
   } else {
-    console.log(`URL IS require : ${url}`);
+    console.log(`videoId IS require : ${videoId}`);
     const fetchApi = await fetch(
-      `https://youtube-mp36.p.rapidapi.com/dl?id=${url}`,
+      `https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`,
       {
         method: "GET",
         headers: {
@@ -29,11 +30,11 @@ export async function mp3Converter(req, res, next) {
         message: "success",
         errror: false,
         song_tittle: fetchResponse.title,
-        finalUrl: fetchResponse.link,
+        final: fetchResponse.link,
       });
     } else {
       console.log(fetchResponse);
-      return res.status(203).json({ finalUrl: fetchResponse, errror: true });
+      return res.status(203).json({ final: fetchResponse, errror: true });
     }
   }
 }

@@ -1,79 +1,97 @@
-import { use, useState } from "react";
+import React from "react";
+import { useState } from "react";
 import "./App.css";
 
-function App() {
+export default function YouTubeDownloader() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
-
+  const [downloadLink, setDownloadLink] = useState("");
+  const [title, setTitle] = useState("YouTube to MP3 Converter");
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(null);
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setDownloadLink("");
     try {
       const res = await fetch("http://localhost:4040/youtube/mp3", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
-      console.log(res);
+
       if (!res.ok) {
-        throw new Error(`API error: ${res.status} ${res.error}`);
+        throw new Error(`API error: ${res.status}`);
+      }
+      const data = await res.json();
+      console.log(data, "this is data");
+      if (data.error) {
+        setError(data.error);
+      } else if (data.finalUrl && data.finalUrl.link) {
+        setDownloadLink(data.finalUrl.link);
+        setTitle(data.finalUrl.title);
+        setProgress(data.finalUrl.progress);
+        setUrl("");
+        console.log("Download URL set:", data.finalUrl.link);
       } else {
-        const data = await res.json();
-        setError(data.errror);
-        console.log("this is rul :", data.finalUrl.downloadUrl);
+        setError("No download URL received from server");
       }
     } catch (error) {
       console.error("Error:", error);
-      // alert(`Failed to process request: ${error.message}`);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <>
-      <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Enter YouTube URL" // Improved placeholder
-            style={{
-              width: "100%",
-              maxWidth: "28rem", // ~448px, similar to max-w-md
-              padding: "0.75rem",
-              marginBottom: "10px",
-              border: "1px solid #d1d5db", // Gray-300
-              borderRadius: "0.5rem",
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)", // Shadow-sm
-              fontSize: "1rem",
-              color: "#111827", // Gray-900
-              outline: "none",
-              transition: "all 0.2s ease",
-              ":focus": {
-                borderColor: "#ef4444", // Red-500 (YouTube-themed)
-                boxShadow: "0 0 0 2px rgba(239, 68, 68, 0.5)", // Red-500 ring
-              },
-              "::placeholder": {
-                color: "#9ca3af", // Gray-400
-              },
-            }}
-          />
-          <button type="submit">Send</button>
+    <div className="grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <div className="w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          {!isLoading ? title : "YouTube to MP3 Converter"}
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="Enter YouTube URL"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2  focus:ring-red-500 focus:border-red-500 transition-all"
+              disabled={isLoading}
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading || !url}
+          >
+            {isLoading ? `Processing...` : "Convert to MP3"}
+          </button>
         </form>
-        <h3
-          style={{
-            color: "#ef4444", // Red-600 (YouTube-themed)
-            fontSize: "1rem",
-            fontWeight: "500",
-            marginTop: "0.5rem",
-            textAlign: "center",
-            display: error ? "block" : "none", // Show only if error exists
-          }}
-        >
-          {error && "Error..."}
-        </h3>
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-200 text-red-600 rounded-lg">
+            {error}
+          </div>
+        )}
+        {downloadLink && (
+          <div className="mt-6 text-center">
+            <a
+              href={downloadLink}
+              download
+              className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-20 px-6 rounded-lg transition-colors"
+            >
+              Download Mp3
+            </a>
+            <p className="mt-2 text-sm text-gray-500">
+              Click the button above to download your audio
+            </p>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
-
-export default App;

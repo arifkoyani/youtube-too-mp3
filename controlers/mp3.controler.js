@@ -10,30 +10,26 @@ export async function mp3Converter(req, res, next) {
       .json({ message: "please end video URL", errror: true });
   } else {
     console.log(`URL IS require : ${url}`);
-
     const fetchApi = await fetch(
-      "https://youtube-mp310.p.rapidapi.com/download/mp3?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dphd1U2JIfUA",
+      `https://youtube-mp36.p.rapidapi.com/dl?id=${url}`,
       {
         method: "GET",
-        qs: {
-          url: `${url}`,
-        },
         headers: {
           "x-rapidapi-key":
             "f92dd96b78msh2fd6bbbfcc4b0f8p12db18jsnec65f65af6fb",
-          "x-rapidapi-host": "youtube-mp310.p.rapidapi.com",
+          "x-rapidapi-host": "youtube-mp36.p.rapidapi.com",
         },
       }
     );
 
     const fetchResponse = await fetchApi.json();
+    console.log("final link", fetchResponse.link);
     if (fetchResponse == "ok") {
-      console.log(fetchResponse);
       return res.status(200).json({
         message: "success",
         errror: false,
         song_tittle: fetchResponse.title,
-        song_link: fetchResponse.link,
+        finalUrl: fetchResponse.link,
       });
     } else {
       console.log(fetchResponse);
